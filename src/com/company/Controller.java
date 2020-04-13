@@ -26,14 +26,12 @@ public class Controller {
    /**
     * Temp space to store a selected Card before played
     */
-   Card hSelectedCard;
-   Card cSelectedCard;
+   Card selectedCard;
 
    /**
-    *
+    * Temp to store the hand index of a selected card before it's played
     */
-   int hSlotNum;
-   int cSlotNum;
+   int selectedHandIndex;
 
    private Model model;
    private View view;
@@ -42,11 +40,9 @@ public class Controller {
       model = m;
       view = v;
 
-      hSelectedCard = null;
-      cSelectedCard = null;
+      selectedCard = null;
+      selectedHandIndex = model.getNumStacks(); // invalid slot on stack(0-2) to start
 
-      hSlotNum = 3; // invalid slot on stack(0-2) to start
-      cSlotNum = 3;
 
       cannotPlay = false;
 
@@ -193,42 +189,6 @@ public class Controller {
    }
 
    /**
-    * Calculate and Display Results
-    */
-   private void handleRoundResults() {
-      String resultText = "";
-      int winnerIndex = 0; // start with index: 0 as winner
-      for (int i = 1; i < model.getNumCardsInPlay(); i++) {
-         int cardValue = GUICard.valueAsInt(model.getCardInPlay(i));
-         int currentLowest = GUICard.valueAsInt(model.getCardInPlay(winnerIndex));
-         if (cardValue < currentLowest) {
-            winnerIndex = i;
-         } else if (cardValue == currentLowest) {
-            if (GUICard.suitAsInt(model.getCardInPlay(i)) < GUICard.suitAsInt(model.getCardInPlay(winnerIndex))) { //
-               // break tie on suit
-               winnerIndex = i;
-            }
-         }
-      }
-      // save winnings
-
-      // revisit
-
-      if (winnerIndex == HUMAN_HAND_INDEX) {
-         model.setHumanWin(true);
-         model.setComputerWin(false);
-         resultText = "You Won";
-      } else {
-         model.setHumanWin(false);
-         model.setComputerWin(true);
-         resultText = "You Lost";
-      }
-
-      View.displayMessage(resultText, "Round Results"); // Display dialog with results
-      view.getCardTable().getPnlPlayArea().revalidate();
-   }
-
-   /**
     * Update player hands in the UI
     */
    private void renderHands() {
@@ -307,25 +267,30 @@ public class Controller {
    }
 
    /**
+    * Checks the value of card stored in selectedCard and compares it to the card at specified slot.
+    *
+    * @param slotNumber The index of the specified card slot.
+    * @return The if the play is valid.
+    */
+   private boolean validCardPlayed(int slotNumber) {
+      boolean result = false;
+      if (null != selectedCard && selectedHandIndex < model.getNumStacks()) {
+         Card cardInSlot =  model.getCardInPlay(slotNumber);
+         if (GUICard.valueAsInt(selectedCard) == GUICard.valueAsInt(cardInSlot)+1 || GUICard.valueAsInt(selectedCard) == GUICard.valueAsInt(cardInSlot)-1) {
+            result = true;
+         }
+      }
+      return result;
+   }
+
+   /**
     * Inner button listener class
     */
    private class CardButtonListener implements ActionListener {
       @Override
       public void actionPerformed(ActionEvent e) {
-         int slotNumber = Integer.valueOf(e.getActionCommand()); // get slot number of the card played
-         JButton button = (JButton) e.getSource();
-
-
-         model.setCardInPlay(1, humanPlayCard(slotNumber));
-
-         button.setIcon(null);
-         button.setEnabled(false);
-         //human is playing first this round
-         if (model.isHumanWin()) {
-            model.setCardInPlay(0, computerPlayCard());
-         }
-         handleRoundResults();
-         resetForNewRound();
+         selectedHandIndex = Integer.valueOf(e.getActionCommand()); // store the hand index of the card desired to be played
+         selectedCard = model.getLowCardGame().getHand(HUMAN_HAND_INDEX).inspectCard(selectedHandIndex); // store the card desired to be played
       }
    }
 
@@ -336,14 +301,17 @@ public class Controller {
    private class SelectStackButtonListener implements ActionListener {
       @Override
       public void actionPerformed(ActionEvent e) {
-         if (null != hSelectedCard) {
             int slotNumber = Integer.valueOf(e.getActionCommand()); // get slot number played
-            // determine if select card is valid
-            // compare to model.getCardInPlay()
+            if (validCardPlayed(slotNumber)) {
+               JButton button = view.getHumanLabelAtIndex(selectedHandIndex);
+               model.setCardInPlay(slotNumber, humanPlayCard(selectedHandIndex));
+               button.setIcon(null);
+               button.setEnabled(false);
+               selectedCard = null;
+               selectedHandIndex = model.getNumStacks();
+               resetForNewRound();
          }
-
       }
-
    }
 
    /**
