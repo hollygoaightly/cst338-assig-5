@@ -25,7 +25,7 @@ public class Assig6 {
 
       // Assemble all the pieces of the MVC
       Model m = new Model(numPacksPerDeck, numJokersPerPack, numUnusedCardsPerPack, unusedCardsPerPack, NUM_PLAYERS, NUM_CARDS_PER_HAND, NUM_STACKS);
-      View v = new View("Build Game", NUM_CARDS_PER_HAND, NUM_PLAYERS);
+      View v = new View("Build Game", NUM_CARDS_PER_HAND, NUM_PLAYERS, NUM_STACKS);
       Controller c = new Controller(m, v);
       c.initController();
    }
