@@ -35,6 +35,8 @@ public class Model {
             numPlayers, numCardsPerHand);
 
       cardsInPlay = new Card[this.numStacks];
+
+      LowCardGame.deal();
    }
 
    public CardGameFramework getLowCardGame() {
