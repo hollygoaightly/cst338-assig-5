@@ -134,30 +134,17 @@ public class Controller {
    }
 
    /**
-    * Play cards from each hand to playing area
+    * Add a card to specified hand
+    * @param playerIndex specifies if the Human or Computer is needing the new card
     */
-   private void playCards() {
-      dealStacks();
-   }
-
-   /**
-    * Reset for next round
-    */
-   private void resetForNewRound() {
-      if (model.getLowCardGame().getNumCardsRemainingInDeck() == 0) { // end game on empty deck
+   private void dealCard(int playerIndex) {
+      Card c = model.getLowCardGame().getCardFromDeck();
+      if (c.getErrorFlag()) { //  end game if deck is empty
          handleEndGame();
-         return;
       }
-
-      // Deal out new cards
-      for (int i = 0; i < model.getNumPlayers(); i++) {
-         model.getLowCardGame().takeCard(i); // replenish hand
+      else { // find index   of played card and replace
+         model.getLowCardGame().getHand(playerIndex).takeCard(c);
       }
-
-      renderHands();
-
-      view.getCardTable().revalidate();
-      view.getCardTable().repaint();
    }
 
    /**
@@ -208,6 +195,7 @@ public class Controller {
          System.out.println("computer could not play");
       }
       else {
+         dealCard(COMPUTER_HAND_INDEX);
          System.out.println("computer played");
       }
    }
@@ -345,6 +333,7 @@ public class Controller {
             view.getHumanCardButton(selectedHandIndex).setEnabled(false);
             selectedCard = null;
             selectedHandIndex = -1;
+            dealCard(HUMAN_HAND_INDEX);
             renderHands();
             computerTurn();
          }
