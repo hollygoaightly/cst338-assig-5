@@ -7,13 +7,6 @@ import javax.swing.*;
  */
 public class View {
    /**
-    * UI Labels
-    */
-   JLabel[] computerLabels;
-   JButton[] humanLabels;
-   JButton[] playedCardLabels;
-
-   /**
     * Game Card Table
     */
    static CardTable cardTable;  // CardTable instance
@@ -24,9 +17,23 @@ public class View {
       cardTable.setLocationRelativeTo(null);
       cardTable.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-      setComputerLabels(new JLabel[numCardsPerHand]);
-      setHumanLabels(new JButton[numCardsPerHand]);
-      setPlayedCardLabels(new JButton[numStacks]);
+      // show everything to the user
+      cardTable.setVisible(true);
+
+      // Create and attach player UI elements
+      for (int i = 0; i < numCardsPerHand; i++) {
+         // create and attach UI for human and computer hands
+         cardTable.getPnlComputerHand().add(new JLabel(GUICard.getBackCardIcon()));
+         cardTable.getPnlHumanHand().add(new JButton());
+      }
+
+      // create and attach stack UI elements
+      for (int i = 0; i < numStacks; i++) {
+         cardTable.getPnlPlayArea().add(new JButton(new ImageIcon()));// put placeholder Buttons for stacks
+      }
+
+      // attach 'I cannot play' button
+      cardTable.getPnlTurnActions().add(new JButton("I cannot play"), JButton.CENTER);
    }
 
    /**
@@ -39,45 +46,23 @@ public class View {
       JOptionPane.showMessageDialog(cardTable, message, title, JOptionPane.PLAIN_MESSAGE);
    }
 
-   public JLabel getComputerLabelAtIndex(int index) {
-      return computerLabels[index];
-   }
-
-   public JLabel setComputerLabelAtIndex(int index, JLabel label) {
-      return computerLabels[index] = label;
-   }
-
-   public JButton getHumanLabelAtIndex(int index) {
-      return humanLabels[index];
-   }
-
-   public void setHumanLabelAtIndex(int index, JButton button) {
-      this.humanLabels[index] = button;
-   }
-
-   public void setComputerLabels(JLabel[] computerLabels) {
-      this.computerLabels = computerLabels;
-   }
-
-   public void setHumanLabels(JButton[] humanLabels) {
-      this.humanLabels = humanLabels;
-   }
-
-   public JButton[] getPlayedCardLabels() {
-      return playedCardLabels;
-   }
-
-   public JButton getPlayedCardLabelsAtIndex(int index) { return playedCardLabels[index]; }
-
-   public void setPlayedCardLabels(JButton[] playedCardLabels) {
-      this.playedCardLabels = playedCardLabels;
-   }
-
-   public void setPlayedCardLabelsAtIndex(int index, JButton button) {
-      this.playedCardLabels[index] = button;
-   }
-
    public CardTable getCardTable() {
       return cardTable;
+   }
+
+   public JLabel getComputerCardLabel(int index) {
+      return (JLabel) cardTable.getPnlComputerHand().getComponent(index);
+   }
+
+   public JButton getHumanCardButton(int index) {
+      return (JButton) cardTable.getPnlHumanHand().getComponent(index);
+   }
+
+   public JButton getPlayAreaButton(int index) {
+      return (JButton) cardTable.getPnlPlayArea().getComponent(index);
+   }
+
+   public JButton getTurnActionButton() {
+      return (JButton) cardTable.getPnlTurnActions().getComponent(0);
    }
 }

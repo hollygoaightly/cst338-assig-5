@@ -1,7 +1,6 @@
 package com.company;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -55,50 +54,36 @@ public class Controller {
     * Attach event listeners
     */
    public void initController() {
-      dealStacks();
-
       for (int i = 0; i < model.getNumStacks(); i++) { // attach button listener to card stacks
-         JButton stackButton = (JButton) view.getCardTable().getPnlPlayArea().getComponent(i);
-         stackButton.setIcon(GUICard.getIcon(model.cardsInPlay[i]));
-         stackButton.setActionCommand(String.valueOf(i));
-         stackButton.addActionListener(new SelectStackButtonListener());
-         view.setPlayedCardLabelsAtIndex(i, stackButton);
+         view.getPlayAreaButton(i).addActionListener(new SelectStackButtonListener());
       }
 
       for (int i = 0; i < model.getNumCardsPerHand(); i++) { // attach button listener to human cards
-         // player hand should be buttons
-         JButton playCardButton =
-               new JButton(GUICard.getIcon(model.getLowCardGame().getHand(HUMAN_HAND_INDEX).inspectCard(i)));
-         playCardButton.setActionCommand(String.valueOf(i));
-         playCardButton.addActionListener(new CardButtonListener());
-         view.setHumanLabelAtIndex(i, playCardButton);
-
-         // SET COMPUTER BACK CARD LABELS --------------------------------------
-         view.setComputerLabelAtIndex(i, new JLabel(GUICard.getBackCardIcon()));
-
-         // ADD LABELS TO PANELS -----------------------------------------
-         view.getCardTable().getPnlComputerHand().add(view.getComputerLabelAtIndex(i));
-         view.getCardTable().getPnlHumanHand().add(view.getHumanLabelAtIndex(i));
+         view.getHumanCardButton(i).addActionListener(new CardButtonListener());
       }
 
-      // attach I cannot play listener
-      ((JButton) view.getCardTable().getPnlTurnActions().getComponent(0)).addActionListener(new CannotPlayButtonListener());
-
-      renderHands();
-      renderStacks();
-      // show everything to the user
-      view.getCardTable().setVisible(true);
+      // attach 'I cannot play' listener
+      view.getTurnActionButton().addActionListener(new CannotPlayButtonListener());
    }
 
    /**
     * Initialize the view with starting values
     */
    private void initView() {
-      for (int i = 0; i < model.getNumStacks(); i++) {
-         view.getCardTable().getPnlPlayArea().add(new JButton(new ImageIcon())); // put placeholders in
+      dealStacks();
+
+      for (int i = 0; i < model.getNumStacks(); i++) { // Update UI with model data
+         view.getPlayAreaButton(i).setIcon(GUICard.getIcon(model.cardsInPlay[i]));
+         view.getPlayAreaButton(i).setActionCommand(String.valueOf(i));
       }
 
-      view.getCardTable().getPnlTurnActions().add(new JButton("I cannot play"), JButton.CENTER);
+      for (int i = 0; i < model.getNumCardsPerHand(); i++) { // Update UI with model data
+         view.getHumanCardButton(i).setIcon(GUICard.getIcon(model.getLowCardGame().getHand(HUMAN_HAND_INDEX).inspectCard(i)));
+         view.getHumanCardButton(i).setActionCommand(String.valueOf(i));
+      }
+
+      renderHands();
+      renderStacks();
    }
 
    /**
@@ -123,10 +108,9 @@ public class Controller {
    private void renderStacks() {
       System.out.println("render stacks checkpoint");
       for (int i = 0; i < model.getNumCardsInPlay(); i++) {
-         JButton playArea = (JButton) view.getCardTable().getPnlPlayArea().getComponent(i);
          Card c = model.getCardInPlay(i);
          if (null != c && !c.getErrorFlag()) {
-            playArea.setIcon(GUICard.getIcon(c));
+            view.getPlayAreaButton(i).setIcon(GUICard.getIcon(c));
          }
       }
    }
@@ -170,9 +154,6 @@ public class Controller {
          model.getLowCardGame().takeCard(i); // replenish hand
       }
 
-      view.getCardTable().getPnlHumanHand().removeAll();
-      view.getCardTable().getPnlComputerHand().removeAll();
-
       renderHands();
 
       view.getCardTable().revalidate();
@@ -183,34 +164,27 @@ public class Controller {
     * Update player hands in the UI
     */
    private void renderHands() {
-      // GENERATE COMP LABELS ----------------------------------------------------
+      // UPDATE COMP LABELS ----------------------------------------------------
       for (int i = 0; i < model.getNumCardsPerHand(); i++) {
          Card card = model.getLowCardGame().getHand(COMPUTER_HAND_INDEX).inspectCard(i);
 
          if (card == null || card.getErrorFlag()) {
-            view.getComputerLabelAtIndex(i).setIcon(null);
-            view.getComputerLabelAtIndex(i).setEnabled(false);
+            view.getComputerCardLabel(i).setIcon(null);
+            view.getComputerCardLabel(i).setEnabled(false);
          }
-
-         // ADD COMP LABELS TO PANELS -----------------------------------------
-         view.getCardTable().getPnlComputerHand().add(view.getComputerLabelAtIndex(i));
       }
 
-      // GENERATE HUMAN LABELS ----------------------------------------------------
+      // UPDATE HUMAN LABELS ----------------------------------------------------
       for (int i = 0; i < model.getNumCardsPerHand(); i++) {
-         // player hand should be buttons
          Card card = model.getLowCardGame().getHand(HUMAN_HAND_INDEX).inspectCard(i);
 
          if (card == null || card.getErrorFlag()) {
-            view.getHumanLabelAtIndex(i).setIcon(null);
-            view.getHumanLabelAtIndex(i).setEnabled(false);
+            view.getHumanCardButton(i).setIcon(null);
+            view.getHumanCardButton(i).setEnabled(false);
          } else {
-            view.getHumanLabelAtIndex(i).setIcon(GUICard.getIcon(card));
-            view.getHumanLabelAtIndex(i).setEnabled(true);
+            view.getHumanCardButton(i).setIcon(GUICard.getIcon(card));
+            view.getHumanCardButton(i).setEnabled(true);
          }
-
-         // ADD HUMAN LABELS TO PANELS -----------------------------------------
-         view.getCardTable().getPnlHumanHand().add(view.getHumanLabelAtIndex(i));
       }
    }
 
@@ -239,16 +213,6 @@ public class Controller {
    }
 
    /**
-    * Update stack with played card.
-    * @param stackIndex
-    * @param card
-    */
-   private void playCardToStack(int stackIndex, Card card) {
-      JButton stackButton = (JButton) view.getCardTable().getPnlPlayArea().getComponent(stackIndex);
-      stackButton.setIcon(GUICard.getIcon(card));
-   }
-
-   /**
     * Computer play card logic.
     *
     * @return The card the Computer will play.
@@ -270,6 +234,15 @@ public class Controller {
          }
       }
       return null;
+   }
+
+   /**
+    * Update stack with played card.
+    * @param stackIndex
+    * @param card
+    */
+   private void playCardToStack(int stackIndex, Card card) {
+      view.getPlayAreaButton(stackIndex).setIcon(GUICard.getIcon(card));
    }
 
    /**
@@ -300,21 +273,21 @@ public class Controller {
     * @return The if the play is valid.
     */
    private boolean validCardPlayed(int stackIndex, Card card) {
-         int selectedValue = GUICard.valueAsInt(card);
-         int topStackValue = GUICard.valueAsInt(model.getCardInPlay(stackIndex));
-         System.out.println("validCardPlayed sanity check: "+ String.valueOf(selectedValue) + " "+ String.valueOf(topStackValue));
-         if (selectedValue == topStackValue + 1 || selectedValue == topStackValue - 1) {
-            System.out.println("cards adjacent: "+ String.valueOf(selectedValue) + " "+ String.valueOf(topStackValue) +  " returning true");
-            return true;
-         }
+      int selectedValue = GUICard.valueAsInt(card);
+      int topStackValue = GUICard.valueAsInt(model.getCardInPlay(stackIndex));
+      System.out.println("validCardPlayed sanity check: "+ String.valueOf(selectedValue) + " "+ String.valueOf(topStackValue));
+      if (selectedValue == topStackValue + 1 || selectedValue == topStackValue - 1) {
+         System.out.println("cards adjacent: "+ String.valueOf(selectedValue) + " "+ String.valueOf(topStackValue) +  " returning true");
+         return true;
+      }
 
-         // handle K -> A or A -> K
-         int highestRank = Card.valuRanks.length - 1;
-         if (topStackValue == highestRank && selectedValue == 0 ||
-               topStackValue == 0 && selectedValue == highestRank) {
-            System.out.println("cards adjacent: "+ String.valueOf(selectedValue) + String.valueOf(topStackValue) +  " returning true");
-            return true;
-         }
+      // handle K -> A or A -> K
+      int highestRank = Card.valuRanks.length - 1;
+      if (topStackValue == highestRank && selectedValue == 0 ||
+            topStackValue == 0 && selectedValue == highestRank) {
+         System.out.println("cards adjacent: "+ String.valueOf(selectedValue) + String.valueOf(topStackValue) +  " returning true");
+         return true;
+      }
       System.out.println(selectedHandIndex);
       System.out.println("card invalid, returning false");
       return false;
@@ -341,23 +314,6 @@ public class Controller {
    }
 
    /**
-    * Checks the value of card stored in selectedCard and compares it to the card at specified slot.
-    *
-    * @param slotNumber The index of the specified card slot.
-    * @return The if the play is valid.
-    */
-   private boolean validCardPlayed(int slotNumber) {
-      boolean result = false;
-      if (null != selectedCard && selectedHandIndex < model.getNumStacks()) {
-         Card cardInSlot =  model.getCardInPlay(slotNumber);
-         if (GUICard.valueAsInt(selectedCard) == GUICard.valueAsInt(cardInSlot)+1 || GUICard.valueAsInt(selectedCard) == GUICard.valueAsInt(cardInSlot)-1) {
-            result = true;
-         }
-      }
-      return result;
-   }
-
-   /**
     * Inner button listener class
     */
    private class CardButtonListener implements ActionListener {
@@ -379,14 +335,14 @@ public class Controller {
          int stackIndex = Integer.valueOf(e.getActionCommand()); // get slot number played
          if (validHumanCardPlayed(stackIndex, selectedCard)) {
             cannotPlay = false; // play is valid, reset flag
-            JButton button = (JButton) view.getCardTable().getPnlHumanHand().getComponent(selectedHandIndex);
             Card card = humanPlayCard(selectedHandIndex);
             model.setCardInPlay(stackIndex, card);
             playCardToStack(stackIndex, card);
             System.out.print("Human play card -- checkpoint:");
             checkpoint();
-            button.setIcon(null);
-            button.setEnabled(false);
+
+            view.getHumanCardButton(selectedHandIndex).setIcon(null);
+            view.getHumanCardButton(selectedHandIndex).setEnabled(false);
             selectedCard = null;
             selectedHandIndex = -1;
             renderHands();
