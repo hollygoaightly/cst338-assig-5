@@ -90,7 +90,6 @@ public class Controller {
     * Deal a card to each stack in the middle of the table.
     */
    private void dealStacks() {
-      System.out.println("dealStacks checkpoint");
       for (int i = 0; i < model.getNumCardsInPlay(); i++) {
          Card c = model.getLowCardGame().getCardFromDeck();
          if (!c.getErrorFlag()) {
@@ -106,7 +105,6 @@ public class Controller {
     * Render the cards currently in play
     */
    private void renderStacks() {
-      System.out.println("render stacks checkpoint");
       for (int i = 0; i < model.getNumCardsInPlay(); i++) {
          Card c = model.getCardInPlay(i);
          if (null != c && !c.getErrorFlag()) {
@@ -179,7 +177,6 @@ public class Controller {
     * handles computer turn.
     */
    private void computerTurn() {
-      System.out.println("start computer turn - current cannot play: " + cannotPlay);
       Card card = computerPlayCard(); // computer play card handles valid play scenario
       if (card == null ) { // handle cannot play scenario
          COMPUTER_CANNOT_PLAY += 1;
@@ -192,11 +189,9 @@ public class Controller {
          else {
             cannotPlay = true;
          }
-         System.out.println("computer could not play");
       }
       else {
          dealCard(COMPUTER_HAND_INDEX);
-         System.out.println("computer played");
       }
    }
 
@@ -210,13 +205,10 @@ public class Controller {
       for (int i = 0; i < model.getNumStacks(); i++) {
          for (int j = 0; j < computerHand.getNumCards(); j++ ) {
             Card card = computerHand.inspectCard(j);
-            System.out.println("Computer Card: " + card.toString());
             if (validCardPlayed(i, card)) {
                cannotPlay = false; // play is valid, reset flag
                model.setCardInPlay(i, card);
                playCardToStack(i, card);
-               System.out.print("Computer play card-- checkpoint:");
-               checkpoint();
                return computerHand.playCard(j);
             }
          }
@@ -263,9 +255,7 @@ public class Controller {
    private boolean validCardPlayed(int stackIndex, Card card) {
       int selectedValue = GUICard.valueAsInt(card);
       int topStackValue = GUICard.valueAsInt(model.getCardInPlay(stackIndex));
-      System.out.println("validCardPlayed sanity check: "+ String.valueOf(selectedValue) + " "+ String.valueOf(topStackValue));
       if (selectedValue == topStackValue + 1 || selectedValue == topStackValue - 1) {
-         System.out.println("cards adjacent: "+ String.valueOf(selectedValue) + " "+ String.valueOf(topStackValue) +  " returning true");
          return true;
       }
 
@@ -273,32 +263,9 @@ public class Controller {
       int highestRank = Card.valuRanks.length - 1;
       if (topStackValue == highestRank && selectedValue == 0 ||
             topStackValue == 0 && selectedValue == highestRank) {
-         System.out.println("cards adjacent: "+ String.valueOf(selectedValue) + String.valueOf(topStackValue) +  " returning true");
          return true;
       }
-      System.out.println(selectedHandIndex);
-      System.out.println("card invalid, returning false");
       return false;
-   }
-
-   // util debug
-   public void checkpoint()
-   {
-      System.out.println("\n\n CHECKPOINT-----");
-      System.out.println("Selected hand index: " + selectedHandIndex);
-      System.out.println("Cards in play:");
-      printCardsInPlay();
-      System.out.println("\n");
-   }
-
-   // util debug
-   public void printCardsInPlay()
-   {
-      for (int i = 0; i < model.getNumStacks(); i++) {
-         Card c = model.getCardInPlay(i);
-         System.out.print(c.getValue() + " ");
-         System.out.println(c.getSuit());
-      }
    }
 
    /**
@@ -319,15 +286,12 @@ public class Controller {
    private class SelectStackButtonListener implements ActionListener {
       @Override
       public void actionPerformed(ActionEvent e) {
-         System.out.println("Select stack-- checkpoint:");
          int stackIndex = Integer.valueOf(e.getActionCommand()); // get slot number played
          if (validHumanCardPlayed(stackIndex, selectedCard)) {
             cannotPlay = false; // play is valid, reset flag
             Card card = humanPlayCard(selectedHandIndex);
             model.setCardInPlay(stackIndex, card);
             playCardToStack(stackIndex, card);
-            System.out.print("Human play card -- checkpoint:");
-            checkpoint();
 
             view.getHumanCardButton(selectedHandIndex).setIcon(null);
             view.getHumanCardButton(selectedHandIndex).setEnabled(false);
@@ -346,7 +310,6 @@ public class Controller {
    private class CannotPlayButtonListener implements ActionListener {
       @Override
       public void actionPerformed(ActionEvent e) {
-         System.out.println("start player cannot play - current cannot play: " + cannotPlay);
          HUMAN_CANNOT_PLAY += 1;
          if (cannotPlay) // second cannot play in sequence, re-deal to stacks
          {
@@ -356,8 +319,6 @@ public class Controller {
          } else {
             cannotPlay = true;
          }
-         System.out.print("Cannot Play-- checkpoint:");
-         checkpoint();
          computerTurn();
       }
    }
